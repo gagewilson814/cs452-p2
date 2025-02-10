@@ -4,7 +4,21 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-void parse_args(int argc, char **argv) {}
+void parse_args(int argc, char **argv) {
+  int index;
+  int c;
+
+  opterr = 0;
+
+  while ((c = getopt (argc, argv, "v:")) != -1)
+    switch (c)
+      {
+      
+      }
+
+  for (index = optind; index < argc; index++)
+    printf ("Non-option argument %s\n", argv[index]);
+}
 
 void sh_destroy(struct shell *sh) {}
 
