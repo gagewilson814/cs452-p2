@@ -11,7 +11,7 @@ void parse_args(int argc, char **argv) {
     switch (c) {
     case 'v':
       printf("lab version %d.%d\n", lab_VERSION_MAJOR, lab_VERSION_MINOR);
-      break;
+      exit(0);
     }
 }
 
