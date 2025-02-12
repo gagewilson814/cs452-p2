@@ -2,6 +2,8 @@
 #include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <sys/types.h>
+#include <termios.h>
 #include <unistd.h>
 
 void parse_args(int argc, char **argv) {
@@ -21,11 +23,48 @@ void sh_destroy(struct shell *sh) {
   sh = NULL;
 }
 
-// void sh_init(struct shell *sh) {}
+void sh_init(struct shell *sh) {
+  /* See if we are running interactively.  */
+  sh->shell_terminal = STDIN_FILENO;
+  sh->shell_is_interactive = isatty (sh->shell_terminal);
 
-// bool do_builtin(struct shell *sh, char **argv) {}
+  if (sh->shell_is_interactive)
+    {
+      /* Loop until we are in the foreground.  */
+      while (tcgetpgrp (sh->shell_terminal) != (sh->shell_pgid = getpgrp ()))
+        kill (- sh->shell_pgid, SIGTTIN);
 
-// char *trim_white(char *line) {}
+      /* Ignore interactive and job-control signals.  */
+      signal (SIGINT, SIG_IGN);
+      signal (SIGQUIT, SIG_IGN);
+      signal (SIGTSTP, SIG_IGN);
+      signal (SIGTTIN, SIG_IGN);
+      signal (SIGTTOU, SIG_IGN);
+      signal (SIGCHLD, SIG_IGN);
+
+      /* Put ourselves in our own process group.  */
+      sh->shell_pgid = getpid ();
+      if (setpgid (sh->shell_pgid, sh->shell_pgid) < 0)
+        {
+          perror ("Couldn't put the shell in its own process group");
+          exit (1);
+        }
+
+      /* Grab control of the terminal.  */
+      tcsetpgrp (sh->shell_terminal, sh->shell_pgid);
+
+      /* Save default terminal attributes for shell.  */
+      tcgetattr (sh->shell_terminal, &sh->shell_tmodes);
+    }
+}
+
+bool do_builtin(struct shell *sh, char **argv) {
+  return true;
+}
+
+char *trim_white(char *line) {
+  return NULL;
+}
 
 void cmd_free(char **line) {
   for (int i = 0; line[i] != NULL; i++) {
@@ -34,8 +73,14 @@ void cmd_free(char **line) {
   free(line);
 }
 
-// char **cmd_parse(char const *line) {}
+char **cmd_parse(char const *line) {
+  return NULL;
+}
 
-// int change_dir(char **dir) {}
+int change_dir(char **dir) {
+  return 0;
+}
 
-// char *get_prompt(const char *env) {}
+char *get_prompt(const char *env) {
+  return NULL;
+}
