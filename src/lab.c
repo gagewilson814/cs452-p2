@@ -5,6 +5,7 @@
 #include <sys/types.h>
 #include <termios.h>
 #include <unistd.h>
+#include <asm-generic/signal.h>
 
 void parse_args(int argc, char **argv) {
   int c;
@@ -59,10 +60,13 @@ void sh_init(struct shell *sh) {
 }
 
 bool do_builtin(struct shell *sh, char **argv) {
+  UNUSED(sh);
+  UNUSED(argv);
   return true;
 }
 
 char *trim_white(char *line) {
+  UNUSED(line);
   return NULL;
 }
 
@@ -74,13 +78,16 @@ void cmd_free(char **line) {
 }
 
 char **cmd_parse(char const *line) {
+  UNUSED(line);
   return NULL;
 }
 
 int change_dir(char **dir) {
+  UNUSED(dir);
   return 0;
 }
 
 char *get_prompt(const char *env) {
+  UNUSED(env);
   return NULL;
 }
