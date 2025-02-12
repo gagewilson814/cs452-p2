@@ -17,10 +17,6 @@ void parse_args(int argc, char **argv) {
 
 void sh_destroy(struct shell *sh) {
   free(sh->prompt);
-  free(sh->shell_terminal);
-  free(sh->shell_is_interactive);
-  free(sh->shell_terminal);
-  free(sh->shell_pgid);
   free(sh);
   sh = NULL;
 }
