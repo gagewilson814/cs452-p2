@@ -18,7 +18,11 @@ void parse_args(int argc, char **argv) {
     switch (c) {
     case 'v':
       printf("shell version %d.%d\n", lab_VERSION_MAJOR, lab_VERSION_MINOR);
-      exit(0);
+      exit(EXIT_SUCCESS);
+
+    default:
+      fprintf(stderr, "Invalid argument\n");
+      exit(EXIT_FAILURE);
     }
 }
 
@@ -29,6 +33,11 @@ void sh_destroy(struct shell *sh) {
 }
 
 void sh_init(struct shell *sh) {
+
+  if (sh == NULL) {
+    fprintf(stderr, "The shell failed to initialize.\n");
+    exit(EXIT_FAILURE);
+  }
   /* See if we are running interactively.  */
   sh->shell_terminal = STDIN_FILENO;
   sh->shell_is_interactive = isatty(sh->shell_terminal);
@@ -68,11 +77,37 @@ bool do_builtin(struct shell *sh, char **argv) {
 }
 
 char *trim_white(char *line) {
-  UNUSED(line);
-  return NULL;
+  if (line == NULL) {
+    return NULL;
+  }
+
+  char *line_copy = strdup(line);
+  if (line_copy == NULL) {
+    fprintf(stderr, "trim_white: allocation error\n");
+    exit(EXIT_FAILURE);
+  }
+
+  char *start = line_copy;
+  while (isspace(*start)) {
+    start++;
+  }
+
+  int end = strlen(start) - 1;
+  while (end >= 0 && isspace(start[end])) {
+    start[end] = '\0';
+    end--;
+  }
+
+  char *trimmed_line = strdup(start);
+  free(line_copy);
+  line_copy = NULL;
+  return trimmed_line;
 }
 
 void cmd_free(char **line) {
+  if (line == NULL) {
+    return;
+  }
   for (int i = 0; line[i] != NULL; i++) {
     free(line[i]);
   }
@@ -80,8 +115,43 @@ void cmd_free(char **line) {
 }
 
 char **cmd_parse(char const *line) {
-  UNUSED(line);
-  return NULL;
+  int max_args = sysconf(_SC_ARG_MAX);
+
+  char **args = malloc((max_args + 1) * sizeof(char *));
+  if (args == NULL) {
+    fprintf(stderr, "cmd_parse: allocation error\n");
+    exit(EXIT_FAILURE);
+  }
+
+  char *line_copy = strdup(line); // duplicate the line
+  if (line_copy == NULL) {
+    fprintf(stderr, "cmd_parse: allocation error\n");
+    exit(EXIT_FAILURE);
+  }
+
+  int i = 0;
+  char *token;
+  char *saveptr;
+
+  token = strtok_r(line_copy, " \t\r\n", &saveptr); // tokenize the line
+
+  /* we will continue to tokenize the line until we reach the end of the line or
+  we run out of arguments to pass in the execvp function */
+
+  while (token != NULL && i < max_args) {
+    args[i] = strdup(token); // duplicate the token and store it in args
+    if (args[i] == NULL) {
+      fprintf(stderr, "cmd_parse: allocation error\n");
+      exit(EXIT_FAILURE);
+    }
+    i++;
+    token = strtok_r(NULL, " \t\r\n", &saveptr); // get the next token
+  }
+  args[i] = NULL; // set the last argument to NULL
+
+  free(line_copy);
+  line_copy = NULL;
+  return args;
 }
 
 int change_dir(char **dir) {
