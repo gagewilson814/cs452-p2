@@ -115,6 +115,11 @@ void cmd_free(char **line) {
 }
 
 char **cmd_parse(char const *line) {
+
+  if (line == NULL) {
+    return NULL;
+  }
+
   int max_args = sysconf(_SC_ARG_MAX);
 
   char **args = malloc((max_args + 1) * sizeof(char *));
