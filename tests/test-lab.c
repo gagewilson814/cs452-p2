@@ -39,6 +39,14 @@ void test_cmd_parse(void) {
   TEST_ASSERT_FALSE(rval[3]);
   cmd_free(rval);
 }
+void test_cmd_parse3(void) {
+  char **rval = cmd_parse("whoami");
+  TEST_ASSERT_TRUE(rval);
+  TEST_ASSERT_EQUAL_STRING("whoami", rval[0]);
+  TEST_ASSERT_EQUAL_STRING(NULL, rval[1]);
+  TEST_ASSERT_FALSE(rval[1]);
+  cmd_free(rval);
+}
 void test_trim_white_no_whitespace(void) {
   char *line = (char *)calloc(10, sizeof(char));
   strncpy(line, "ls -a", 10);
@@ -93,6 +101,7 @@ void test_get_prompt_default(void) {
   TEST_ASSERT_EQUAL_STRING(prompt, "shell>");
   free(prompt);
 }
+
 void test_get_prompt_custom(void) {
   const char *prmpt = "MY_PROMPT";
   if (setenv(prmpt, "foo>", true)) {
@@ -126,10 +135,35 @@ void test_ch_dir_root(void) {
   free(actual);
   cmd_free(cmd);
 }
+
+void test_ch_dir_temp(void) {
+  char *line = (char *)calloc(10, sizeof(char));
+  strncpy(line, "cd /tmp", 10);
+  char **cmd = cmd_parse(line);
+  change_dir(cmd);
+  char *actual = getcwd(NULL, 0);
+  TEST_ASSERT_EQUAL_STRING("/tmp", actual);
+  free(line);
+  free(actual);
+  cmd_free(cmd);
+}
+
+void test_ch_dir_usr(void) {
+  char *line = (char *)calloc(10, sizeof(char));
+  strncpy(line, "cd /usr", 10);
+  char **cmd = cmd_parse(line);
+  change_dir(cmd);
+  char *actual = getcwd(NULL, 0);
+  TEST_ASSERT_EQUAL_STRING("/usr", actual);
+  free(line);
+  free(actual);
+  cmd_free(cmd);
+}
 int main(void) {
   UNITY_BEGIN();
   RUN_TEST(test_cmd_parse);
   RUN_TEST(test_cmd_parse2);
+  RUN_TEST(test_cmd_parse3);
   RUN_TEST(test_trim_white_no_whitespace);
   RUN_TEST(test_trim_white_start_whitespace);
   RUN_TEST(test_trim_white_end_whitespace);
@@ -140,5 +174,7 @@ int main(void) {
   RUN_TEST(test_get_prompt_custom);
   RUN_TEST(test_ch_dir_home);
   RUN_TEST(test_ch_dir_root);
+  RUN_TEST(test_ch_dir_temp);
+  RUN_TEST(test_ch_dir_usr);
   return UNITY_END();
 }
