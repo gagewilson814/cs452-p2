@@ -82,6 +82,7 @@ bool do_builtin(struct shell *sh, char **argv) {
   bool rval = false;
   if (strcmp(argv[0], "exit") == 0) {
     rval = false;
+    clear_history();
     sh_destroy(sh);
     exit(EXIT_SUCCESS);
   }
@@ -106,30 +107,18 @@ char *trim_white(char *line) {
     return NULL;
   }
 
-  // lets make a copy to prevent modifying OG string
-  char *line_copy = strdup(line);
-  if (line_copy == NULL) {
-    fprintf(stderr, "trim_white: allocation error\n");
-    exit(EXIT_FAILURE);
+  // trim leading whitespace
+  while (*line && isspace((unsigned char)*line)) {
+    line++;
   }
 
-  // trim spaces from the front of the sting
-  char *start = line_copy;
-  while (isspace(*start)) {
-    start++;
+  // trim trailing whitespace
+  size_t len = strlen(line);
+  while (len > 0 && isspace((unsigned char)line[len - 1])) {
+    line[len - 1] = '\0';
+    len--;
   }
-
-  // trim spaces from the back end of the string
-  int end = strlen(start) - 1;
-  while (end >= 0 && isspace(start[end])) {
-    start[end] = '\0'; // replace the space with a null terminator
-    end--;
-  }
-
-  char *trimmed_line = strdup(start);
-  free(line_copy);
-  line_copy = NULL;
-  return trimmed_line;
+  return line;
 }
 
 void cmd_free(char **line) {
@@ -183,8 +172,7 @@ char **cmd_parse(char const *line) {
   }
   args[i] = NULL; // set the last argument to NULL
 
-  free(line_copy);
-  line_copy = NULL;
+  free(line_copy); // free the copy of the line
   return args;
 }
 
